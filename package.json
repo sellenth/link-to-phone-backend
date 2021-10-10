@@ -1,0 +1,19 @@
+{
+  "name": "link-to-phone-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sellenth/link-to-phone-backend.git"
+  },
+  "author": "HS",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sellenth/link-to-phone-backend/issues"
+  },
+  "homepage": "https://github.com/sellenth/link-to-phone-backend#readme"
+}
