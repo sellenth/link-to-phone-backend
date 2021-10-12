@@ -19,7 +19,7 @@ app.post('/incomingSMS', (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.send("Welcome, hello.")
+    res.send("Welcome, hello. v1")
 })
 
 /*
