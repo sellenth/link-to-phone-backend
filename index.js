@@ -3,6 +3,7 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 const mysql = require('mysql');
+const argon2 = require('argon2');
 
 const connection = mysql.createConnection({
   host     : process.env.RDS_HOSTNAME,
@@ -12,29 +13,57 @@ const connection = mysql.createConnection({
   database : process.env.RDS_DB_NAME
 });
 
+app.post('/incomingSMS', (req, res) => {
+    console.log(req.body);
+    res.status(200).send();
+})
 
 app.get('/', (req, res) => {
     res.send("Welcome, hello.")
 })
 
-app.post('/create-user', (req, res, err) => {
+/*
+try {
+  if (await argon2.verify("<big long hash>", "password")) {
+    // password match
+  } else {
+    // password did not match
+  }
+} catch (err) {
+  // internal failure
+}
+*/
+
+function createUserQuery(res, phoneNumber, nationCode, pwHash){
+    connection.query(`INSERT INTO users (phoneNumber, nationCode, password) VALUES (${phoneNumber}, ${nationCode}, "${pwHash}")`,
+        function (err, rows, fields) {
+        if (err) {
+            console.log(err)
+            res.status(500)
+            res.send('Server failed to add user, see log');
+        } else {
+            console.log(rows);
+            res.status(200);
+            res.send('User successfully created.')
+        }
+    });
+}
+
+app.post('/create-user', async (req, res, err) => {
     const {phoneNumber, nationCode, password} = req.body;
     if (!phoneNumber, !nationCode, !password){
         res.status(400);
         res.send('Request must specify phone number, nation code, and password');
     } else {
-        connection.query(`INSERT INTO users (phoneNumber, nationCode, password) VALUES (${phoneNumber}, ${nationCode}, "${password}")`,
-            function (err, rows, fields) {
-            if (err) {
-                console.log(err)
-                res.status(500)
-                res.send('Server failed to add user, see log');
-            } else {
-                console.log(rows);
-                res.status(200);
-                res.send('User successfully created.')
-            }
-        });
+        try {
+            const pwHash = await argon2.hash(password);
+            createUserQuery(res, phoneNumber, nationCode, pwHash)
+        } catch (err) {
+            console.log(err);
+            res.status(500)
+            res.send('Server error, please try again later');
+        }
+
     }
 })
 
