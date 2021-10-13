@@ -9,7 +9,7 @@ const mysql = require('mysql');
 const argon2 = require('argon2');
 const {phone} = require('phone');
 const twilioClient = require('twilio')()
-const twilioNumber = '+18339691337'
+const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
 
 const connection = mysql.createConnection({
   host     : process.env.RDS_HOSTNAME,
@@ -19,6 +19,10 @@ const connection = mysql.createConnection({
   database : process.env.RDS_DB_NAME
 });
 
+app.get('/', (req, res) => {
+    res.send("Welcome, hello. v1")
+})
+
 function provideHelpMsg(phoneNumber){
     twilioClient.messages
     .create({body: 'Invalid command. Respond to this text with STOP to opt-out of future messages.', from: twilioNumber, to: phoneNumber})
@@ -27,6 +31,11 @@ function provideHelpMsg(phoneNumber){
 function issueVerificationMsg(phoneNumber){
     twilioClient.messages
     .create({body: 'Welcome to the link-to-phone service. Respond to this text with ACCEPT to verify your account.', from: twilioNumber, to: phoneNumber})
+}
+
+function issueUserRequestMsg(phoneNumber, body){
+    twilioClient.messages
+    .create({body: body, from: twilioNumber, to: phoneNumber})
 }
 
 function confirmVerification(phoneNumber){
@@ -39,7 +48,7 @@ app.post('/incomingSMS', (req, res) => {
     const incomingNum = phone(req.body.From);
     if (incomingMsg === "accept"){
         connection.query(`UPDATE users set verified = 1 where phoneNumber = "${incomingNum.phoneNumber}"`,
-        function (err, rows, fields) {
+        function (err, rows) {
             if (err){
                 console.log(err)
                 res.status(500)
@@ -62,25 +71,38 @@ app.post('/incomingSMS', (req, res) => {
     }
 })
 
-app.get('/', (req, res) => {
-    res.send("Welcome, hello. v1")
-})
+app.post('/outgoingSMS', (req, res) => {
+    const {phoneNumber, password, msgContent} = req.body;
+    connection.query(`SELECT password FROM users WHERE phoneNumber = "${phoneNumber}" AND verified = 1;`,
+        async (err, rows) => {
+            if(err){
+                console.log(err);
+                res.status(500).send('Something went wrong, see log');
+            } else if (rows.length === 0){
+                res.status(200).send("Phone number doesn't exist or isn't verified");
+            } else {
+                const hashedPW = rows[0].password;
+                try {
+                    if (await argon2.verify(hashedPW, password)) {
+                        issueUserRequestMsg(phoneNumber, msgContent);                    
+                        res.status(200).send("Successfully sent msg to", phoneNumber);
+                    } else {
+                        res.status(401).send("Invalid password");
+                    }
+                } catch (err) {
+                    console.log(err);
+                    res.status(500).send('Something went wrong, see log');
+                }
+            }
 
-/*
-try {
-  if (await argon2.verify("<big long hash>", "password")) {
-    // password match
-  } else {
-    // password did not match
-  }
-} catch (err) {
-  // internal failure
-}
-*/
+        }
+    )
+     
+})
 
 function createUserQuery(res, phoneNumber, pwHash){
     connection.query(`INSERT INTO users (phoneNumber, password) VALUES ("${phoneNumber}", "${pwHash}")`,
-        function (err, rows, fields) {
+        function (err, rows) {
         if (err) {
             console.log(err)
             if (err.code === 'ER_DUP_ENTRY'){
@@ -129,5 +151,4 @@ app.listen(port, () => {
     }
     console.log('Connected to database.');
     });
-
 })
