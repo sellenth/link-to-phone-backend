@@ -52,11 +52,11 @@ app.post('/incomingSMS', (req, res) => {
             if (err){
                 console.log(err)
                 res.status(500)
-                res.send("No user exists with that phone number");
+                res.send("Something went wrong, see log");
             } 
             if (rows.affectedRows === 0) {
                 console.log('No user exists with phone number', incomingNum.phoneNumber)
-                res.status(200).send();
+                res.status(404).send();
             }
             else {
                 console.log(rows);
@@ -85,7 +85,7 @@ app.post('/outgoingSMS', (req, res) => {
                 try {
                     if (await argon2.verify(hashedPW, password)) {
                         issueUserRequestMsg(phoneNumber, msgContent);                    
-                        res.status(200).send("Successfully sent msg to", phoneNumber);
+                        res.status(200).send(`Successfully sent msg to ${phoneNumber}`);
                     } else {
                         res.status(401).send("Invalid password");
                     }
