@@ -1,15 +1,21 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { urlencoded } = require('body-parser');
 const app = express();
+app.use(cors('http://localhost:3000'));
 app.use(express.json());
 app.use(urlencoded({ extended: false }));
 
 const mysql = require('mysql');
 const argon2 = require('argon2');
 const {phone} = require('phone');
+
 const twilioClient = require('twilio')()
 const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
+
+const favicon = require('serve-favicon')
+app.use(favicon(__dirname + '/build/favicon.ico'))
 
 const connection = mysql.createConnection({
   host     : process.env.RDS_HOSTNAME,
@@ -19,9 +25,8 @@ const connection = mysql.createConnection({
   database : process.env.RDS_DB_NAME
 });
 
-app.get('/', (req, res) => {
-    res.send("Welcome, hello. v1")
-})
+app.use('/', express.static('build'));
+
 
 function provideHelpMsg(phoneNumber){
     twilioClient.messages
@@ -140,7 +145,7 @@ app.post('/create-user', async (req, res, err) => {
     }
 })
 
-const port = process.env.port || 3000;
+const port = process.env.port || 3001;
 app.listen(port, () => {
     console.log("Listening on port: ", port);
 
