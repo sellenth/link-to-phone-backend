@@ -15,9 +15,9 @@ const twilioClient = require('twilio')()
 const twilioNumber = process.env.TWILIO_PHONE_NUMBER;
 
 const favicon = require('serve-favicon')
-app.use(favicon(__dirname + '/build/favicon.ico'))
+app.use(favicon(__dirname + '/../build/favicon.ico'))
 
-app.use('/', express.static('build'));
+app.use('/', express.static('../build'));
 
 function sendTwilioMsg(msg, phoneNumber){
     if (process.env.NODE_ENV !== 'testing'){

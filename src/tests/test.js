@@ -1,8 +1,8 @@
 require('dotenv').config();
-const request = require('supertest');
-const app = require('./app');
-const { connection, connectToDB } = require('./db');
 const fs = require('fs')
+const request = require('supertest');
+const app = require('../app');
+const { connection, connectToDB } = require('../db');
 
 const validatedNumber = "+1 541 555 0100"
 const unvalidatedNumber = "+1 541 555 0101"
