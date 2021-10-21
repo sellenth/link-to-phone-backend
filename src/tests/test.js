@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path')
 const fs = require('fs')
 const request = require('supertest');
 const app = require('../app');
@@ -10,7 +11,7 @@ const unvalidatedNumber = "+1 541 555 0101"
 before(() => {
   connectToDB();
   connection.query(`drop table if exists users;`);
-  const createUserTableSQL = fs.readFileSync('./usersTable.sql').toString();
+  const createUserTableSQL = fs.readFileSync(path.join(__dirname, 'usersTable.sql')).toString();
   connection.query(createUserTableSQL);
 })
 
