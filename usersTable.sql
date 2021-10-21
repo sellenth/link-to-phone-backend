@@ -1,4 +1,4 @@
-CREATE TABLE `ebdb`.`users` (
+CREATE TABLE `users` (
   `uid` INT NOT NULL AUTO_INCREMENT,
   `phoneNumber` VARCHAR(15) NOT NULL,
   `password` CHAR(95) NOT NULL,

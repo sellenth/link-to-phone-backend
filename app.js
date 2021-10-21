@@ -19,25 +19,27 @@ app.use(favicon(__dirname + '/build/favicon.ico'))
 
 app.use('/', express.static('build'));
 
+function sendTwilioMsg(msg, phoneNumber){
+    if (process.env.NODE_ENV !== 'testing'){
+        twilioClient.messages
+            .create({ body: msg, from: twilioNumber, to: phoneNumber })
+    }
+}
 
 function provideHelpMsg(phoneNumber) {
-    twilioClient.messages
-        .create({ body: 'Invalid command. Respond to this text with STOP to opt-out of future messages.', from: twilioNumber, to: phoneNumber })
+    sendTwilioMsg('Invalid command. Respond to this text with STOP to opt-out of future messages.', phoneNumber);
 }
 
 function issueVerificationMsg(phoneNumber) {
-    twilioClient.messages
-        .create({ body: 'Welcome to the link-to-phone service. Respond to this text with ACCEPT to verify your account.', from: twilioNumber, to: phoneNumber })
+    sendTwilioMsg('Welcome to the link-to-phone service. Respond to this text with ACCEPT to verify your account.', phoneNumber);
 }
 
 function issueUserRequestMsg(phoneNumber, body) {
-    twilioClient.messages
-        .create({ body: body, from: twilioNumber, to: phoneNumber })
+    sendTwilioMsg(body, phoneNumber);
 }
 
 function confirmVerification(phoneNumber) {
-    twilioClient.messages
-        .create({ body: "You've successfully verified your account, enjoy!", from: twilioNumber, to: phoneNumber })
+    sendTwilioMsg('You\'ve successfully verified your account, enjoy!', phoneNumber);
 }
 
 app.post('/incomingSMS', (req, res) => {
@@ -76,11 +78,12 @@ app.post('/outgoingSMS', (req, res) => {
     } else {
         connection.query(`SELECT password FROM users WHERE phoneNumber = "${numberParsed.phoneNumber}" AND verified = 1;`,
             async (err, rows) => {
+                console.log(rows)
                 if (err) {
                     console.log(err);
                     res.status(500).send('Something went wrong, see log');
                 } else if (rows.length === 0) {
-                    res.status(200).send("Phone number doesn't exist or isn't verified");
+                    res.status(404).send("Phone number doesn't exist or isn't verified");
                 } else {
                     const hashedPW = rows[0].password;
                     try {
