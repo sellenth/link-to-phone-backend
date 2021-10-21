@@ -1,4 +1,6 @@
 require('dotenv').config();
+process.env.NODE_ENV = process.argv[2];
+
 const express = require('express');
 const cors = require('cors');
 const { urlencoded } = require('body-parser');
@@ -20,7 +22,7 @@ app.use(favicon(__dirname + '/../build/favicon.ico'))
 app.use('/', express.static('../build'));
 
 function sendTwilioMsg(msg, phoneNumber){
-    if (process.env.NODE_ENV !== 'testing'){
+    if (['production', 'development'].includes(process.env.NODE_ENV)){
         twilioClient.messages
             .create({ body: msg, from: twilioNumber, to: phoneNumber })
     }

@@ -5,8 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "mocha",
-    "start": "cross-env NODE_ENV=production node index.js",
-    "dev": "nodemon index.js"
+    "start": "node src/index.js production",
+    "dev": "nodemon src/index.js development"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,6 @@
   "dependencies": {
     "argon2": "^0.28.2",
     "cors": "^2.8.5",
-    "cross-env": "^7.0.3",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "mysql": "^2.18.1",
